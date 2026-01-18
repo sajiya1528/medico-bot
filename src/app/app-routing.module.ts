@@ -5,6 +5,7 @@ import { PatientDashboardComponent } from './components/patient-dashboard/patien
 import { DoctorDashboardComponent } from './components/doctor-dashboard/doctor-dashboard.component';
 import { ConsultationComponent } from './components/consultation/consultation.component';
 import { AiChatbotComponent } from './components/ai-chatbot/ai-chatbot.component';
+import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
 import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
@@ -27,6 +28,12 @@ const routes: Routes = [
         component: AiChatbotComponent,
         canActivate: [AuthGuard],
         data: { role: 'patient' }
+    },
+    {
+        path: 'admin-panel',
+        component: AdminPanelComponent,
+        canActivate: [AuthGuard],
+        data: { role: 'admin' }
     },
     {
         path: 'consultation/:id',

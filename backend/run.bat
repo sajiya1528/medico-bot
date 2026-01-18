@@ -1,0 +1,13 @@
+@echo off
+echo Setting up Python Virtual Environment...
+python -m venv venv
+call venv\Scripts\activate
+
+echo Installing Requirements...
+pip install -r requirements.txt
+
+echo Seeding Database...
+python seed.py
+
+echo Starting Server...
+uvicorn app.main:app --reload

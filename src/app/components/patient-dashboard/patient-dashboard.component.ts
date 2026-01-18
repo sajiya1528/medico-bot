@@ -34,16 +34,19 @@ export class PatientDashboardComponent implements OnInit {
 
     ngOnInit(): void {
         this.currentUser = this.authService.currentUserValue;
-        this.doctors = this.authService.getAllDoctors();
+        this.authService.getAllDoctors().subscribe(doctors => {
+            this.doctors = doctors;
+        });
         this.loadAppointments();
         this.setMinDate();
     }
 
     loadAppointments(): void {
         if (this.currentUser) {
-            this.appointments = this.appointmentService
-                .getAppointmentsByPatient(this.currentUser.id)
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            this.appointmentService.getAllAppointments()
+                .subscribe(appointments => {
+                    this.appointments = appointments.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
+                });
         }
     }
 
@@ -61,7 +64,7 @@ export class PatientDashboardComponent implements OnInit {
         const doctor = this.doctors.find(d => d.id === this.selectedDoctorId);
         if (!doctor) return;
 
-        const appointment = this.appointmentService.createAppointment({
+        this.appointmentService.createAppointment({
             patientId: this.currentUser.id,
             patientName: this.currentUser.name,
             doctorId: doctor.id,
@@ -69,15 +72,15 @@ export class PatientDashboardComponent implements OnInit {
             date: this.selectedDate,
             timeSlot: this.selectedTimeSlot,
             status: 'pending'
+        }).subscribe(() => {
+            this.bookingSuccess = true;
+            setTimeout(() => {
+                this.bookingSuccess = false;
+                this.showBookingForm = false;
+                this.resetForm();
+                this.loadAppointments();
+            }, 2000);
         });
-
-        this.bookingSuccess = true;
-        setTimeout(() => {
-            this.bookingSuccess = false;
-            this.showBookingForm = false;
-            this.resetForm();
-            this.loadAppointments();
-        }, 2000);
     }
 
     resetForm(): void {
@@ -88,8 +91,10 @@ export class PatientDashboardComponent implements OnInit {
 
     cancelAppointment(appointmentId: string): void {
         if (confirm('Are you sure you want to cancel this appointment?')) {
-            this.appointmentService.updateAppointmentStatus(appointmentId, 'cancelled');
-            this.loadAppointments();
+            this.appointmentService.updateAppointmentStatus(appointmentId, 'cancelled')
+                .subscribe(() => {
+                    this.loadAppointments();
+                });
         }
     }
 

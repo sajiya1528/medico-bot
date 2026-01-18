@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Appointment, TimeSlot } from '../models/models';
+import { AuthService } from './auth.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class AppointmentService {
-    private storageKey = 'appointments';
+    private apiUrl = 'http://localhost:8000/api/appointments';
 
     private timeSlots: TimeSlot[] = [
         { value: '09:00', label: '09:00 AM', available: true },
@@ -18,92 +22,82 @@ export class AppointmentService {
         { value: '17:00', label: '05:00 PM', available: true }
     ];
 
-    constructor() {
-        this.initializeStorage();
-    }
+    constructor(private http: HttpClient, private authService: AuthService) { }
 
-    private initializeStorage(): void {
-        if (!localStorage.getItem(this.storageKey)) {
-            localStorage.setItem(this.storageKey, JSON.stringify([]));
-        }
-    }
-
-    private getAppointments(): Appointment[] {
-        const data = localStorage.getItem(this.storageKey);
-        return data ? JSON.parse(data) : [];
-    }
-
-    private saveAppointments(appointments: Appointment[]): void {
-        localStorage.setItem(this.storageKey, JSON.stringify(appointments));
+    private getHeaders(): HttpHeaders {
+        const user = this.authService.currentUserValue;
+        const token = user ? (user as any).token : '';
+        return new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        });
     }
 
     getTimeSlots(): TimeSlot[] {
         return [...this.timeSlots];
     }
 
-    createAppointment(appointment: Omit<Appointment, 'id' | 'createdAt'>): Appointment {
-        const appointments = this.getAppointments();
-        const newAppointment: Appointment = {
-            ...appointment,
-            id: this.generateId(),
-            createdAt: new Date().toISOString()
+    // Aliases to satisfy potential interface requirements
+    getAppointments(): Observable<Appointment[]> {
+        return this.getAllAppointments();
+    }
+
+    updateAppointment(id: string, status: Appointment['status']): Observable<Appointment> {
+        return this.updateAppointmentStatus(id, status);
+    }
+
+    // Adapters
+    private adaptFromApi(data: any): Appointment {
+        return {
+            id: data.id,
+            patientId: data.patient_id,
+            patientName: data.patient?.name || 'Unknown',
+            doctorId: data.doctor_id,
+            doctorName: data.doctor?.name || 'Unknown',
+            date: data.date,
+            timeSlot: data.time_slot,
+            status: data.status,
+            createdAt: data.created_at
         };
-        appointments.push(newAppointment);
-        this.saveAppointments(appointments);
-        return newAppointment;
     }
 
-    getAppointmentsByPatient(patientId: string): Appointment[] {
-        return this.getAppointments().filter(apt => apt.patientId === patientId);
+    private adaptToApi(appointment: any): any {
+        return {
+            date: appointment.date,
+            time_slot: appointment.timeSlot,
+            doctor_id: appointment.doctorId,
+            symptoms: appointment.symptoms || ''
+        };
     }
 
-    getAppointmentsByDoctor(doctorId: string): Appointment[] {
-        return this.getAppointments().filter(apt => apt.doctorId === doctorId);
+    createAppointment(appointment: any): Observable<Appointment> {
+        const payload = this.adaptToApi(appointment);
+        return this.http.post<any>(this.apiUrl, payload, { headers: this.getHeaders() })
+            .pipe(map((data: any) => this.adaptFromApi(data)));
     }
 
-    getAllAppointments(): Appointment[] {
-        return this.getAppointments();
+    getAllAppointments(): Observable<Appointment[]> {
+        return this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders() })
+            .pipe(map((list: any[]) => list.map((item: any) => this.adaptFromApi(item))));
     }
 
-    updateAppointmentStatus(appointmentId: string, status: Appointment['status']): void {
-        const appointments = this.getAppointments();
-        const index = appointments.findIndex(apt => apt.id === appointmentId);
-        if (index !== -1) {
-            appointments[index].status = status;
-            this.saveAppointments(appointments);
-        }
+    updateAppointmentStatus(appointmentId: string | number, status: Appointment['status']): Observable<Appointment> {
+        return this.http.put<any>(`${this.apiUrl}/${appointmentId}`, { status }, { headers: this.getHeaders() })
+            .pipe(map((data: any) => this.adaptFromApi(data)));
     }
 
-    getAppointmentById(id: string): Appointment | undefined {
-        return this.getAppointments().find(apt => apt.id === id);
+    getAppointmentsById(id: string | number): Observable<Appointment> {
+        return this.http.get<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() })
+            .pipe(map((data: any) => this.adaptFromApi(data)));
     }
 
-    deleteAppointment(appointmentId: string): void {
-        const appointments = this.getAppointments().filter(apt => apt.id !== appointmentId);
-        this.saveAppointments(appointments);
+    deleteAppointment(appointmentId: string | number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/${appointmentId}`, { headers: this.getHeaders() });
     }
 
-    private generateId(): string {
-        return 'apt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-
-    // Get unique patients who have booked appointments with a specific doctor
-    getPatientsByDoctor(doctorId: string): { id: string; name: string; appointmentCount: number }[] {
-        const appointments = this.getAppointmentsByDoctor(doctorId);
-        const patientMap = new Map<string, { name: string; count: number }>();
-
-        appointments.forEach(apt => {
-            if (patientMap.has(apt.patientId)) {
-                patientMap.get(apt.patientId)!.count++;
-            } else {
-                patientMap.set(apt.patientId, { name: apt.patientName, count: 1 });
-            }
-        });
-
-        return Array.from(patientMap.entries()).map(([id, data]) => ({
-            id,
-            name: data.name,
-            appointmentCount: data.count
-        }));
+    // Helper to get patients from appointments (since backend doesn't have a direct endpoint yet)
+    // In a real app, this should be an API call like /api/doctor/patients
+    getPatientsWithAppointments(): Observable<Appointment[]> {
+        return this.getAllAppointments();
     }
 }

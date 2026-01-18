@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 // Angular Material Modules
 import { MatButtonModule } from '@angular/material/button';
@@ -21,6 +22,7 @@ import { PatientDashboardComponent } from './components/patient-dashboard/patien
 import { DoctorDashboardComponent } from './components/doctor-dashboard/doctor-dashboard.component';
 import { ConsultationComponent } from './components/consultation/consultation.component';
 import { AiChatbotComponent } from './components/ai-chatbot/ai-chatbot.component';
+import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
 
 // Pipes
 import { FilterPipe } from './pipes/filter.pipe';
@@ -33,6 +35,7 @@ import { FilterPipe } from './pipes/filter.pipe';
         DoctorDashboardComponent,
         ConsultationComponent,
         AiChatbotComponent,
+        AdminPanelComponent,
         FilterPipe
     ],
     imports: [
@@ -40,6 +43,7 @@ import { FilterPipe } from './pipes/filter.pipe';
         BrowserAnimationsModule,
         FormsModule,
         AppRoutingModule,
+        HttpClientModule,
         MatButtonModule,
         MatIconModule,
         MatFormFieldModule,

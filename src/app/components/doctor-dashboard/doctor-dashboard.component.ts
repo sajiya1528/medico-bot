@@ -28,44 +28,69 @@ export class DoctorDashboardComponent implements OnInit {
     loadData(): void {
         if (this.currentUser) {
             this.loadAppointments();
-            this.loadPatients();
         }
     }
 
     loadAppointments(): void {
         if (this.currentUser) {
-            this.appointments = this.appointmentService
-                .getAppointmentsByDoctor(this.currentUser.id)
-                .sort((a, b) => {
-                    // Sort by date, then by time
-                    const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
-                    if (dateCompare !== 0) return dateCompare;
-                    return a.timeSlot.localeCompare(b.timeSlot);
+            this.appointmentService.getAllAppointments()
+                .subscribe(appointments => {
+                    this.appointments = appointments.sort((a, b) => {
+                        const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+                        if (dateCompare !== 0) return dateCompare;
+                        return a.timeSlot.localeCompare(b.timeSlot);
+                    });
+                    this.calculatePatients();
                 });
         }
     }
 
-    loadPatients(): void {
-        if (this.currentUser) {
-            this.patients = this.appointmentService.getPatientsByDoctor(this.currentUser.id);
-        }
+    // Extracted logic to calculate patients from loaded appointments
+    calculatePatients(): void {
+        const patientMap = new Map<string, { name: string; count: number }>();
+
+        this.appointments.forEach(apt => {
+            // Patient details might need to be fetched if not in appointment, 
+            // but our backend includes { patient: { name, ... } }
+            // The frontend model might need update if 'patientName' is not on top level but in patient object.
+            // Backend sends: { patientId, doctorId, ..., patient: { name: '...' } }
+            // Frontend generic Appointment model might match or we fix map here.
+
+            const pName = (apt as any).patient?.name || apt.patientName || 'Unknown';
+
+            const pId = String(apt.patientId); // Normalize id to string for map key
+
+            if (patientMap.has(pId)) {
+                patientMap.get(pId)!.count++;
+            } else {
+                patientMap.set(pId, { name: pName, count: 1 });
+            }
+        });
+
+        this.patients = Array.from(patientMap.entries()).map(([id, data]) => ({
+            id,
+            name: data.name,
+            appointmentCount: data.count
+        }));
     }
 
+    // loadPatients method removed or deprecated in favor of calculatePatients
+
     approveAppointment(appointmentId: string): void {
-        this.appointmentService.updateAppointmentStatus(appointmentId, 'confirmed');
-        this.loadData();
+        this.appointmentService.updateAppointmentStatus(appointmentId, 'confirmed')
+            .subscribe(() => this.loadData());
     }
 
     cancelAppointment(appointmentId: string): void {
         if (confirm('Are you sure you want to cancel this appointment?')) {
-            this.appointmentService.updateAppointmentStatus(appointmentId, 'cancelled');
-            this.loadData();
+            this.appointmentService.updateAppointmentStatus(appointmentId, 'cancelled')
+                .subscribe(() => this.loadData());
         }
     }
 
     completeAppointment(appointmentId: string): void {
-        this.appointmentService.updateAppointmentStatus(appointmentId, 'completed');
-        this.loadData();
+        this.appointmentService.updateAppointmentStatus(appointmentId, 'completed')
+            .subscribe(() => this.loadData());
     }
 
     getStatusClass(status: string): string {

@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
+import { ApiService } from '../../services/api.service';
 import { User } from '../../models/models';
 
 interface Message {
@@ -109,7 +110,7 @@ export class AiChatbotComponent implements OnInit, AfterViewChecked {
         }
     };
 
-    constructor(private authService: AuthService) { }
+    constructor(private authService: AuthService, private apiService: ApiService) { }
 
     ngOnInit(): void {
         this.currentUser = this.authService.currentUserValue;
@@ -210,22 +211,14 @@ export class AiChatbotComponent implements OnInit, AfterViewChecked {
     }
 
     generateResponse(input: string): void {
-        let response = this.responses['default'];
-
-        // Match user input to responses
-        for (const key in this.responses) {
-            if (input.includes(key.toLowerCase())) {
-                response = this.responses[key];
-                break;
+        this.apiService.chat(input).subscribe({
+            next: (data) => {
+                this.addBotMessage(data.response);
+            },
+            error: (err) => {
+                this.addBotMessage("Sorry, I'm having trouble connecting to the server.");
             }
-        }
-
-        // Check for greetings
-        if (input.match(/\b(hi|hello|hey|greetings)\b/)) {
-            response = this.responses['greeting'];
-        }
-
-        this.addBotMessage(response.text, response.options);
+        });
     }
 
     addBotMessage(text: string, options?: string[]): void {

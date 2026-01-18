@@ -32,13 +32,20 @@ export class LoginComponent {
             return;
         }
 
-        const success = this.authService.login(this.email, this.password, this.selectedRole);
-
-        if (success) {
-            this.redirectToDashboard();
-        } else {
-            this.errorMessage = 'Invalid credentials. Please try again.';
-        }
+        this.authService.login(this.email, this.password)
+            .subscribe({
+                next: (user) => {
+                    // Optional: Check if the logged in user matches the selected role if you want to enforce it,
+                    // or just redirect based on the user's actual role.
+                    if (user.role !== this.selectedRole) {
+                        // warning or just allow it? Let's just allow it and redirect correctly.
+                    }
+                    this.redirectToDashboard();
+                },
+                error: (error) => {
+                    this.errorMessage = error.error?.message || 'Invalid credentials. Please try again.';
+                }
+            });
     }
 
     private redirectToDashboard(): void {

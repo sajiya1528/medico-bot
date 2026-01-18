@@ -26,13 +26,20 @@ export class ConsultationComponent implements OnInit {
     ngOnInit(): void {
         const appointmentId = this.route.snapshot.paramMap.get('id');
         if (appointmentId) {
-            const apt = this.appointmentService.getAppointmentById(appointmentId);
-            if (apt && apt.status === 'confirmed') {
-                this.appointment = apt;
-                this.startCallTimer();
-            } else {
-                this.router.navigate(['/patient-dashboard']);
-            }
+            this.appointmentService.getAppointmentsById(appointmentId).subscribe({
+                next: (apt) => {
+                    if (apt && apt.status === 'confirmed') {
+                        this.appointment = apt;
+                        this.startCallTimer();
+                    } else {
+                        // Redirect if not confirmed or not found
+                        this.router.navigate(['/patient-dashboard']);
+                    }
+                },
+                error: () => {
+                    this.router.navigate(['/patient-dashboard']);
+                }
+            });
         }
     }
 
