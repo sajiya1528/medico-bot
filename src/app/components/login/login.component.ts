@@ -68,4 +68,8 @@ export class LoginComponent {
             return 'patient@test.com / patient123';
         }
     }
+
+    clearError(): void {
+        this.errorMessage = '';
+    }
 }

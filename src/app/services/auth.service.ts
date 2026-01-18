@@ -67,7 +67,7 @@ export class AuthService {
     }
 
     getAllDoctors(): Observable<User[]> {
-        return this.http.get<User[]>(`http://localhost:3000/api/users`)
+        return this.http.get<User[]>(`http://localhost:8000/api/users`)
             .pipe(map(users => users.filter(u => u.role === 'doctor')));
     }
 }

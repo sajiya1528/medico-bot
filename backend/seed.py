@@ -22,7 +22,7 @@ def seed_db():
                 "role": "admin",
                 "name": "Admin User"
             },
-            {
+            {g
                 "email": "doctor@test.com",
                 "password": "doctor123",
                 "role": "doctor",

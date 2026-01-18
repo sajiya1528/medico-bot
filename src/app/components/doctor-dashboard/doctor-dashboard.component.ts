@@ -76,19 +76,19 @@ export class DoctorDashboardComponent implements OnInit {
 
     // loadPatients method removed or deprecated in favor of calculatePatients
 
-    approveAppointment(appointmentId: string): void {
+    approveAppointment(appointmentId: string | number): void {
         this.appointmentService.updateAppointmentStatus(appointmentId, 'confirmed')
             .subscribe(() => this.loadData());
     }
 
-    cancelAppointment(appointmentId: string): void {
+    cancelAppointment(appointmentId: string | number): void {
         if (confirm('Are you sure you want to cancel this appointment?')) {
             this.appointmentService.updateAppointmentStatus(appointmentId, 'cancelled')
                 .subscribe(() => this.loadData());
         }
     }
 
-    completeAppointment(appointmentId: string): void {
+    completeAppointment(appointmentId: string | number): void {
         this.appointmentService.updateAppointmentStatus(appointmentId, 'completed')
             .subscribe(() => this.loadData());
     }

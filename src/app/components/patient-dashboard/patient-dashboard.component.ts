@@ -89,7 +89,7 @@ export class PatientDashboardComponent implements OnInit {
         this.selectedTimeSlot = '';
     }
 
-    cancelAppointment(appointmentId: string): void {
+    cancelAppointment(appointmentId: string | number): void {
         if (confirm('Are you sure you want to cancel this appointment?')) {
             this.appointmentService.updateAppointmentStatus(appointmentId, 'cancelled')
                 .subscribe(() => {
