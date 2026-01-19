@@ -3,7 +3,7 @@ export interface User {
     id: string | number;
     email: string;
     password?: string; // made optional as sometimes it's not present
-    role: 'doctor' | 'patient' | 'admin'; // Added admin
+    role: 'doctor' | 'patient';
     name: string;
     token?: string; // For auth response
 }

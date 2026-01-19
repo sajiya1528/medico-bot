@@ -22,7 +22,6 @@ import { PatientDashboardComponent } from './components/patient-dashboard/patien
 import { DoctorDashboardComponent } from './components/doctor-dashboard/doctor-dashboard.component';
 import { ConsultationComponent } from './components/consultation/consultation.component';
 import { AiChatbotComponent } from './components/ai-chatbot/ai-chatbot.component';
-import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
 
 // Pipes
 import { FilterPipe } from './pipes/filter.pipe';
@@ -35,7 +34,6 @@ import { FilterPipe } from './pipes/filter.pipe';
         DoctorDashboardComponent,
         ConsultationComponent,
         AiChatbotComponent,
-        AdminPanelComponent,
         FilterPipe
     ],
     imports: [

@@ -22,11 +22,11 @@ Name:     Dr. Michael Chen
 
 ---
 
-### 👤 Patient (sajiya) Accounts
+### 👤 Patient Accounts
 
-#### Primary Patient(sajiya)
+#### Primary Patient
 ```
-Email:    patient (sajiya)@test.com
+Email:    patient@test.com
 Password: patient123
 Name:     John Smith
 ```
